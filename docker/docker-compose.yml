@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  issuer:
+    build:
+      context: ..
+      dockerfile: docker/issuer.Dockerfile
+    depends_on:
+      - redis
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASS: ${ADMIN_PASS:-change-me}
+      JWT_ISSUER: ${JWT_ISSUER:-hwid-licenser}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-hwid-clients}
+      JWT_KID: ${JWT_KID:-local-dev}
+      REDIS_URL: redis://redis:6379
+      SQLITE_PATH: /data/audit.db
+      RATE_MAX: ${RATE_MAX:-120}
+      SLOW_DELAY_AFTER: ${SLOW_DELAY_AFTER:-20}
+      SLOW_DELAY_MS: ${SLOW_DELAY_MS:-200}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      PRIVATE_KEY_PATH: /keys/private.pem
+      PUBLIC_KEY_PATH: /keys/public.pem
+    volumes:
+      - issuer_data:/data
+      - ../keys:/keys:ro
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: ..
+      dockerfile: docker/bot.Dockerfile
+    depends_on:
+      - issuer
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?set DISCORD_TOKEN}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:?set DISCORD_CLIENT_ID}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      ISSUER_BASE_URL: http://issuer:4000
+      ISSUER_ADMIN_USER: ${ADMIN_USER:-admin}
+      ISSUER_ADMIN_PASS: ${ADMIN_PASS:-change-me}
+    restart: unless-stopped
+    profiles:
+      - bot
+
+volumes:
+  issuer_data:

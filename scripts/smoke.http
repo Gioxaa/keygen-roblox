@@ -1,0 +1,35 @@
+@base = http://localhost:4000
+@auth = Basic {{base64(admin:change-me)}}
+
+### Issue license
+POST {{base}}/issue
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "hwid": "ABC123XYZ",
+  "ttlSeconds": 3600,
+  "plan": "pro",
+  "note": "trial"
+}
+
+### Verify license
+POST {{base}}/verify
+Content-Type: application/json
+
+{
+  "token": "<PASTE_TOKEN>",
+  "hwid": "ABC123XYZ"
+}
+
+### Revoke license
+POST {{base}}/revoke
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "jti": "<PASTE_JTI>"
+}
+
+### Check status
+GET {{base}}/status/<PASTE_JTI>

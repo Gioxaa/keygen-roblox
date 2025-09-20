@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.pnpm-store/
+.env
+.env.*
+*.log
+coverage/
+apps/issuer/dist/
+apps/discord-bot/dist/
+apps/issuer/src/keys/private.pem
+data/
